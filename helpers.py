@@ -23,9 +23,12 @@ def resolve_target_url(target_url: str) -> str:
     stripped = target_url.strip()
     if stripped.lower().startswith("lnurl1"):
         try:
-            return str(lnurl_decode(stripped))
+            stripped = str(lnurl_decode(stripped))
         except Exception as exc:
             raise ValueError(f"Could not decode LNURL target: {stripped!r}.") from exc
+    # Applies whether stripped came in as-is or just came out of lnurl_decode
+    # above -- a decoded LNURL can be schemeless too if it was encoded from a
+    # bare host/path in the first place.
     if not urlsplit(stripped).scheme:
         host = stripped.split("/", 1)[0].split(":", 1)[0]
         scheme = "http" if is_onion_host(host) else "https"
