@@ -8,12 +8,17 @@ from lnurl import encode as lnurl_encode
 from .models import Roxy
 
 
+def is_onion_host(host: str) -> bool:
+    return host.lower().endswith(".onion")
+
+
 def resolve_target_url(target_url: str) -> str:
     """Return the real HTTP(S) URL a roxy should forward requests to.
 
-    A target_url may be a plain http(s) URL (scheme optional -- "https://" is
-    assumed if missing), or a bech32-encoded LNURL string -- in which case it
-    is decoded to the URL it points to.
+    A target_url may be a plain http(s) URL (scheme optional -- defaults to
+    "https://", or "http://" for a bare .onion host, since Tor hidden
+    services are conventionally served over plain http), or a bech32-encoded
+    LNURL string -- in which case it is decoded to the URL it points to.
     """
     stripped = target_url.strip()
     if stripped.lower().startswith("lnurl1"):
@@ -22,7 +27,9 @@ def resolve_target_url(target_url: str) -> str:
         except Exception as exc:
             raise ValueError(f"Could not decode LNURL target: {stripped!r}.") from exc
     if not urlsplit(stripped).scheme:
-        stripped = f"https://{stripped}"
+        host = stripped.split("/", 1)[0].split(":", 1)[0]
+        scheme = "http" if is_onion_host(host) else "https"
+        stripped = f"{scheme}://{stripped}"
     return stripped
 
 

@@ -23,6 +23,11 @@ If the target is itself an LNURL, Roxy decodes it server-side and forwards
 to the underlying service — useful for re-hosting an existing LNURL-pay or
 LNURL-withdraw endpoint behind a link you control and can repoint later.
 
+A target without an `http(s)://` scheme is assumed to be `https://`, unless
+its host ends in `.onion`, in which case `http://` is assumed instead (the
+Tor-hidden-service convention) and the request is routed through a local Tor
+SOCKS proxy rather than normal DNS/TCP.
+
 Roxy only forwards `GET` requests (the shape LNURL flows and most link
 redirection use cases need); the body of the upstream response, its status
 code, and its content type are passed straight back to the caller.
@@ -52,4 +57,8 @@ Full schema is available in the Swagger docs at `/docs#/roxy`.
 ## Requirements
 
 - LNbits 1.0.0 or later
-- `httpx` (for outbound proxy requests)
+- `httpx[socks]` (for outbound proxy requests, including `.onion` targets via
+  Tor — the plain `httpx` package doesn't support SOCKS proxies on its own)
+- A local Tor SOCKS proxy reachable at `socks5h://127.0.0.1:9050`, only if
+  you plan to point a roxy at an `.onion` target. Override the address with
+  the `ROXY_TOR_PROXY` environment variable if Tor listens elsewhere.

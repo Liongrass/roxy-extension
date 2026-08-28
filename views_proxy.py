@@ -1,9 +1,12 @@
+import os
+from urllib.parse import urlsplit
+
 import httpx
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
 from .crud import get_roxy_by_hash
-from .helpers import resolve_target_url
+from .helpers import is_onion_host, resolve_target_url
 
 roxy_proxy_router = APIRouter(prefix="/api/v1/p")
 
@@ -15,6 +18,11 @@ _EXCLUDED_RESPONSE_HEADERS = {
     "transfer-encoding",
     "connection",
 }
+
+# .onion hosts aren't resolvable over normal DNS/TCP -- route them through a
+# local Tor SOCKS proxy instead. Requires the `httpx[socks]` extra installed.
+# Override with the ROXY_TOR_PROXY env var if Tor listens somewhere else.
+TOR_PROXY = os.environ.get("ROXY_TOR_PROXY", "socks5h://127.0.0.1:9050")
 
 
 @roxy_proxy_router.get("/{unique_hash}", name="roxy.api_proxy")
@@ -32,8 +40,11 @@ async def api_proxy(request: Request, unique_hash: str) -> Response:
     except ValueError as exc:
         return JSONResponse(status_code=502, content={"detail": str(exc)})
 
+    proxy = TOR_PROXY if is_onion_host(urlsplit(target).hostname or "") else None
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=15) as client:
+        async with httpx.AsyncClient(
+            follow_redirects=True, timeout=15, proxy=proxy
+        ) as client:
             upstream = await client.get(target, params=dict(request.query_params))
     except httpx.HTTPError as exc:
         return JSONResponse(
