@@ -67,7 +67,9 @@ window.PageRoxy = {
   },
   methods: {
     activeUrlFor(roxy) {
-      return roxy.encoding === 'lnurl' ? roxy.lnurl : roxy.proxy_url
+      // Always the raw URL: lnbits-qrcode-lnurl bech32-encodes it itself for
+      // display/QR/copy, so feeding it roxy.lnurl here would double-encode it.
+      return roxy.proxy_url
     },
     getRoxies() {
       LNbits.api
