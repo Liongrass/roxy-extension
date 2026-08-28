@@ -29,6 +29,15 @@ def build_roxy_urls(roxy: Roxy, req: Request) -> tuple[str, Optional[str]]:
     populated only when the roxy is configured to be shared as an LNURL.
     """
     proxy_url = str(req.url_for("roxy.api_proxy", unique_hash=roxy.unique_hash))
+    if proxy_url.strip().lower().startswith("lnurl1"):
+        # Should be structurally impossible: url_for() always returns a plain
+        # http(s) URL. Guard anyway so a bech32-in-bech32 LNURL can never be
+        # served to a wallet -- fail loudly instead of handing out a link
+        # that decodes to another LNURL instead of a fetchable URL.
+        raise ValueError(
+            f"Refusing to LNURL-encode a value that is already an LNURL: "
+            f"`{proxy_url!s}`."
+        )
     if roxy.encoding != "lnurl":
         return proxy_url, None
     try:
