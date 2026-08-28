@@ -10,7 +10,7 @@ class CreateRoxyData(BaseModel):
     title: str
     wallet: Optional[str] = None
     target_url: str
-    encoding: Encoding = "url"
+    encoding: Encoding = "lnurl"
     is_enabled: bool = True
 
 
@@ -32,7 +32,7 @@ class Roxy(BaseModel):
     # `TypeError: issubclass() arg 1 must be a class`. Literal stays fine on
     # CreateRoxyData/UpdateRoxyData since those are plain request bodies and
     # never go through dict_to_model.
-    encoding: str = "url"
+    encoding: str = "lnurl"
     is_enabled: bool = True
     unique_hash: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -52,7 +52,7 @@ window.PageRoxy = {
       formDialog: {
         show: false,
         data: {
-          encoding: 'url'
+          encoding: 'lnurl'
         }
       },
       editDialog: {
@@ -169,7 +169,7 @@ window.PageRoxy = {
       this.formDialog = {
         show: false,
         data: {
-          encoding: 'url'
+          encoding: 'lnurl'
         }
       }
     },
