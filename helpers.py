@@ -1,4 +1,5 @@
 from typing import Optional
+from urllib.parse import urlsplit
 
 from fastapi import Request
 from lnurl import decode as lnurl_decode
@@ -10,8 +11,9 @@ from .models import Roxy
 def resolve_target_url(target_url: str) -> str:
     """Return the real HTTP(S) URL a roxy should forward requests to.
 
-    A target_url may be a plain http(s) URL, or a bech32-encoded LNURL
-    string -- in which case it is decoded to the URL it points to.
+    A target_url may be a plain http(s) URL (scheme optional -- "https://" is
+    assumed if missing), or a bech32-encoded LNURL string -- in which case it
+    is decoded to the URL it points to.
     """
     stripped = target_url.strip()
     if stripped.lower().startswith("lnurl1"):
@@ -19,6 +21,8 @@ def resolve_target_url(target_url: str) -> str:
             return str(lnurl_decode(stripped))
         except Exception as exc:
             raise ValueError(f"Could not decode LNURL target: {stripped!r}.") from exc
+    if not urlsplit(stripped).scheme:
+        stripped = f"https://{stripped}"
     return stripped
 
 
