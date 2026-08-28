@@ -1,0 +1,8 @@
+[
+  {
+    "path": "/roxy/",
+    "name": "PageRoxy",
+    "template": "/roxy/static/index.vue",
+    "component": "/roxy/static/index.js"
+  }
+]

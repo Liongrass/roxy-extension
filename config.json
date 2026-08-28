@@ -1,0 +1,14 @@
+{
+  "name": "Roxy",
+  "short_description": "Proxy any URL or LNURL behind a stable, updatable link and QR code",
+  "tile": "/roxy/static/roxy.png",
+  "min_lnbits_version": "1.0.0",
+  "contributors": [
+    {
+      "name": "Leo",
+      "uri": "mailto:leo@lightning.engineering",
+      "role": "Developer"
+    }
+  ],
+  "license": "MIT"
+}
