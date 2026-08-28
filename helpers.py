@@ -18,9 +18,13 @@ def resolve_target_url(target_url: str) -> str:
     A target_url may be a plain http(s) URL (scheme optional -- defaults to
     "https://", or "http://" for a bare .onion host, since Tor hidden
     services are conventionally served over plain http), or a bech32-encoded
-    LNURL string -- in which case it is decoded to the URL it points to.
+    LNURL string, optionally prefixed with a "lightning:" URI scheme (as
+    wallets/QR codes commonly display it) -- in which case it is decoded to
+    the URL it points to.
     """
     stripped = target_url.strip()
+    if stripped.lower().startswith("lightning:"):
+        stripped = stripped[len("lightning:") :].strip()
     if stripped.lower().startswith("lnurl1"):
         try:
             stripped = str(lnurl_decode(stripped))
