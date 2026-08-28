@@ -26,7 +26,13 @@ class Roxy(BaseModel):
     wallet: str
     title: str
     target_url: str
-    encoding: Encoding = "url"
+    # plain str, not Encoding/Literal: this model is read back from the DB via
+    # lnbits.db.dict_to_model(), which calls issubclass(field_type, bool) on
+    # every field's annotation -- Literal[...] isn't a class, so that raises
+    # `TypeError: issubclass() arg 1 must be a class`. Literal stays fine on
+    # CreateRoxyData/UpdateRoxyData since those are plain request bodies and
+    # never go through dict_to_model.
+    encoding: str = "url"
     is_enabled: bool = True
     unique_hash: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

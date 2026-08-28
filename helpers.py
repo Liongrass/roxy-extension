@@ -28,7 +28,15 @@ def build_roxy_urls(roxy: Roxy, req: Request) -> tuple[str, Optional[str]]:
     proxy_url is always the raw callback URL. lnurl is its bech32 encoding,
     populated only when the roxy is configured to be shared as an LNURL.
     """
-    proxy_url = str(req.url_for("roxy.api_proxy", unique_hash=roxy.unique_hash))
+    try:
+        proxy_url = str(req.url_for("roxy.api_proxy", unique_hash=roxy.unique_hash))
+    except Exception as exc:
+        # e.g. starlette.routing.NoMatchFound if the route can't be resolved
+        # for some reason -- callers only need to know proxy_url/lnurl could
+        # not be built, not have the whole request blow up over it.
+        raise ValueError(
+            f"Could not build the proxy URL for roxy {roxy.unique_hash!r}: {exc!s}"
+        ) from exc
     if proxy_url.strip().lower().startswith("lnurl1"):
         # Should be structurally impossible: url_for() always returns a plain
         # http(s) URL. Guard anyway so a bech32-in-bech32 LNURL can never be
