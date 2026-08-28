@@ -49,7 +49,10 @@ async def api_proxy(request: Request, unique_hash: str) -> Response:
     except httpx.HTTPError as exc:
         return JSONResponse(
             status_code=502,
-            content={"detail": f"Error reaching target: {exc!s}"},
+            content={
+                "detail": f"Error reaching target {target!r} "
+                f"(stored target_url: {roxy.target_url!r}): {exc!s}"
+            },
         )
 
     headers = {
