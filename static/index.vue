@@ -233,24 +233,25 @@
               <q-card>
                 <q-card-section>
                   <p>
-                    <strong>Roxy</strong> is a generic HTTP proxy. Create a
-                    roxy pointing at any URL (or LNURL) as its
+                    <strong>Roxy</strong> is a generic HTTP redirector. Create
+                    a roxy pointing at any URL (or LNURL) as its
                     <em>target</em>. Roxy hands you back a stable public link
                     &mdash; shown as a raw URL or as a bech32 LNURL, your
                     choice &mdash; along with a QR code.
                   </p>
                   <p>
-                    Share that link/QR once. Requests to it are forwarded
-                    live to whatever the target currently is. Change the
-                    target any time, through this UI or the API, and every
-                    copy of the QR code you already handed out keeps working
-                    &mdash; now pointing wherever you last set it.
+                    Share that link/QR once. Visitors are redirected to
+                    whatever the target currently is. Change the target any
+                    time, through this UI or the API, and every copy of the
+                    QR code you already handed out keeps working &mdash; now
+                    redirecting wherever you last set it.
                   </p>
                   <p>
-                    If a target is itself an LNURL, Roxy decodes it and
-                    forwards to the underlying service, so an existing
+                    If a target is itself an LNURL, Roxy decodes it to the
+                    URL it points to before redirecting, so an existing
                     LNURL-pay/withdraw endpoint can be re-hosted behind a
-                    link you control.
+                    link you control. Roxy never fetches the target itself
+                    &mdash; your own wallet or browser follows the redirect.
                   </p>
                 </q-card-section>
               </q-card>
@@ -285,7 +286,7 @@
             v-model.trim="formDialog.data.target_url"
             type="text"
             label="Target URL or LNURL *"
-            hint="Where requests to this roxy get forwarded"
+            hint="Where visitors to this roxy's link get redirected"
           ></q-input>
           <q-select
             filled
@@ -334,7 +335,7 @@
             v-model.trim="editDialog.data.target_url"
             type="text"
             label="Target URL or LNURL *"
-            hint="Where requests to this roxy get forwarded"
+            hint="Where visitors to this roxy's link get redirected"
           ></q-input>
           <q-select
             filled
