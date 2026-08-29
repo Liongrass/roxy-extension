@@ -15,6 +15,10 @@ _EXCLUDED_RESPONSE_HEADERS = {
     "content-length",
     "transfer-encoding",
     "connection",
+    # A roxy's target is arbitrary and can be repointed by its owner at any
+    # time; forwarding this would let it set cookies scoped to this LNbits
+    # instance's own origin on behalf of anyone who visits the roxy link.
+    "set-cookie",
 }
 
 
