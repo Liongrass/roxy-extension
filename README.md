@@ -1,7 +1,7 @@
 # Roxy — Generic HTTP Redirector for LNbits
 
 **Roxy** creates a stable public link — shown as a raw URL or as a bech32
-**LNURL**, your choice — backed by a QR code. Visiting that link **redirects**
+**LNURL**, — backed by a QR code. Visiting that link **redirects**
 the caller to a *target* URL (or LNURL) that you configure.
 
 The link never changes. The target behind it can, at any time, through the
@@ -22,24 +22,10 @@ without reprinting it.
 If the target is itself an LNURL, Roxy decodes it to the URL it points to
 before redirecting — useful for re-hosting an existing LNURL-pay or
 LNURL-withdraw endpoint behind a link you control and can repoint later.
-Roxy never fetches the target itself or inspects what's behind it -- the
-caller's own client follows the redirect, whether that turns out to be an
-LNURL JSON response or a full website.
-
-A target without an `http(s)://` scheme is assumed to be `https://`, unless
-its host ends in `.onion`, in which case `http://` is assumed instead (the
-Tor-hidden-service convention). Only `http`/`https` targets are ever
-redirected to -- anything else (`javascript:`, `data:`, etc.) is rejected.
 
 The redirect is a `307` with `Cache-Control: no-store`, deliberately never a
 permanent redirect: since a roxy's target can change at any time, nothing
 (browser, wallet, CDN) should ever cache where it currently points.
-
-Because Roxy only issues a redirect and never fetches the target on your
-behalf, whether a wallet completes an LNURL flow through a roxy depends on
-its own HTTP client following the redirect -- most do, for a plain GET, but
-this is a real behavior change from server-side proxying, worth being aware
-of if you point a roxy at an LNURL target.
 
 ## Usage
 
