@@ -7,7 +7,7 @@ from loguru import logger
 from .crud import get_roxy_by_hash
 from .helpers import resolve_target_url
 
-roxy_proxy_router = APIRouter(prefix="/api/v1/p")
+roxy_proxy_router = APIRouter()
 
 
 def _with_extra_query(url: str, extra: list[tuple[str, str]]) -> str:

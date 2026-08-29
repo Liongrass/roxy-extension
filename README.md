@@ -12,8 +12,8 @@ without reprinting it.
 
 1. Create a roxy: give it a title and a **target** — any `https://` URL, or
    an LNURL (`lnurl1...`).
-2. Roxy gives you back a **proxy URL** (`https://<host>/roxy/api/v1/p/<hash>`),
-   shown either raw or bech32-encoded as an LNURL, plus a QR code for it.
+2. Roxy gives you back a **proxy URL** (`https://<host>/roxy/<hash>`), shown
+   either raw or bech32-encoded as an LNURL, plus a QR code for it.
 3. Anyone who visits that link gets an HTTP redirect to whatever the target
    currently is — query parameters carried over onto it.
 4. Change the target whenever you like. The link and QR code you already
@@ -45,7 +45,7 @@ permanent redirect: since a roxy's target can change at any time, nothing
 | `POST` | `/roxy/api/v1/roxies` | Admin key | Create a roxy |
 | `PUT` | `/roxy/api/v1/roxies/{id}` | Admin key | Update a roxy's title, target, share format, or enabled state |
 | `DELETE` | `/roxy/api/v1/roxies/{id}` | Admin key | Delete a roxy |
-| `GET` | `/roxy/api/v1/p/{unique_hash}` | None (public) | The proxy endpoint itself — redirects to the configured target |
+| `GET` | `/roxy/{unique_hash}` | None (public) | The proxy endpoint itself — redirects to the configured target |
 
 Full schema is available in the Swagger docs at `/docs#/roxy`.
 
