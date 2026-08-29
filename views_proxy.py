@@ -1,6 +1,7 @@
 import httpx
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
+from loguru import logger
 
 from .crud import get_roxy_by_hash
 from .helpers import resolve_target_url
@@ -30,18 +31,30 @@ async def api_proxy(request: Request, unique_hash: str) -> Response:
     try:
         target = resolve_target_url(roxy.target_url)
     except ValueError as exc:
-        return JSONResponse(status_code=502, content={"detail": str(exc)})
+        # Same reasoning as below: don't leak the stored target_url (which
+        # resolve_target_url's own error messages embed) to an unauthenticated
+        # public caller.
+        logger.warning(f"Roxy {unique_hash!r}: could not resolve target: {exc!s}")
+        return JSONResponse(
+            status_code=502,
+            content={"detail": "Could not resolve target."},
+        )
 
     try:
         async with httpx.AsyncClient(follow_redirects=True, timeout=15) as client:
             upstream = await client.get(target, params=dict(request.query_params))
     except httpx.HTTPError as exc:
+        # Details (target/target_url) are logged server-side only -- this
+        # endpoint is public and unauthenticated, so the response body must
+        # not leak the configured target (internal hosts, ports, embedded
+        # credentials, etc.) to whoever triggered the error.
+        logger.warning(
+            f"Roxy {unique_hash!r}: error reaching target {target!r} "
+            f"(stored target_url: {roxy.target_url!r}): {exc!s}"
+        )
         return JSONResponse(
             status_code=502,
-            content={
-                "detail": f"Error reaching target {target!r} "
-                f"(stored target_url: {roxy.target_url!r}): {exc!s}"
-            },
+            content={"detail": "Error reaching target."},
         )
 
     headers = {
