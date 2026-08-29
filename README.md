@@ -1,8 +1,8 @@
-# Roxy — Generic HTTP Proxy for LNbits
+# Roxy — Generic HTTP Redirector for LNbits
 
 **Roxy** creates a stable public link — shown as a raw URL or as a bech32
-**LNURL**, your choice — backed by a QR code. Requests made to that link are
-forwarded live to a *target* URL (or LNURL) that you configure.
+**LNURL**, your choice — backed by a QR code. Visiting that link **redirects**
+the caller to a *target* URL (or LNURL) that you configure.
 
 The link never changes. The target behind it can, at any time, through the
 UI or the API. Print the QR code once, and keep repointing what it does
@@ -14,24 +14,32 @@ without reprinting it.
    an LNURL (`lnurl1...`).
 2. Roxy gives you back a **proxy URL** (`https://<host>/roxy/api/v1/p/<hash>`),
    shown either raw or bech32-encoded as an LNURL, plus a QR code for it.
-3. Anyone who visits that link gets forwarded to whatever the target
-   currently is — query parameters included.
+3. Anyone who visits that link gets an HTTP redirect to whatever the target
+   currently is — query parameters carried over onto it.
 4. Change the target whenever you like. The link and QR code you already
-   shared keep working, now pointing at the new target.
+   shared keep working, now redirecting to the new target.
 
-If the target is itself an LNURL, Roxy decodes it server-side and forwards
-to the underlying service — useful for re-hosting an existing LNURL-pay or
+If the target is itself an LNURL, Roxy decodes it to the URL it points to
+before redirecting — useful for re-hosting an existing LNURL-pay or
 LNURL-withdraw endpoint behind a link you control and can repoint later.
+Roxy never fetches the target itself or inspects what's behind it -- the
+caller's own client follows the redirect, whether that turns out to be an
+LNURL JSON response or a full website.
 
 A target without an `http(s)://` scheme is assumed to be `https://`, unless
 its host ends in `.onion`, in which case `http://` is assumed instead (the
-Tor-hidden-service convention). Note that Roxy does not itself route requests
-through Tor -- reaching an `.onion` target requires LNbits to provide that
-(it doesn't yet), so onion targets aren't reachable until it does.
+Tor-hidden-service convention). Only `http`/`https` targets are ever
+redirected to -- anything else (`javascript:`, `data:`, etc.) is rejected.
 
-Roxy only forwards `GET` requests (the shape LNURL flows and most link
-redirection use cases need); the body of the upstream response, its status
-code, and its content type are passed straight back to the caller.
+The redirect is a `307` with `Cache-Control: no-store`, deliberately never a
+permanent redirect: since a roxy's target can change at any time, nothing
+(browser, wallet, CDN) should ever cache where it currently points.
+
+Because Roxy only issues a redirect and never fetches the target on your
+behalf, whether a wallet completes an LNURL flow through a roxy depends on
+its own HTTP client following the redirect -- most do, for a plain GET, but
+this is a real behavior change from server-side proxying, worth being aware
+of if you point a roxy at an LNURL target.
 
 ## Usage
 
@@ -51,11 +59,10 @@ code, and its content type are passed straight back to the caller.
 | `POST` | `/roxy/api/v1/roxies` | Admin key | Create a roxy |
 | `PUT` | `/roxy/api/v1/roxies/{id}` | Admin key | Update a roxy's title, target, share format, or enabled state |
 | `DELETE` | `/roxy/api/v1/roxies/{id}` | Admin key | Delete a roxy |
-| `GET` | `/roxy/api/v1/p/{unique_hash}` | None (public) | The proxy endpoint itself — forwards to the configured target |
+| `GET` | `/roxy/api/v1/p/{unique_hash}` | None (public) | The proxy endpoint itself — redirects to the configured target |
 
 Full schema is available in the Swagger docs at `/docs#/roxy`.
 
 ## Requirements
 
 - LNbits 1.0.0 or later
-- `httpx` (for outbound proxy requests)

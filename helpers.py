@@ -37,6 +37,15 @@ def resolve_target_url(target_url: str) -> str:
         host = stripped.split("/", 1)[0].split(":", 1)[0]
         scheme = "http" if is_onion_host(host) else "https"
         stripped = f"{scheme}://{stripped}"
+    scheme = urlsplit(stripped).scheme.lower()
+    if scheme not in ("http", "https"):
+        # The result of this function ends up in a redirect Location header,
+        # not just an outbound request our own code makes -- a target_url of
+        # "javascript:..." or "data:..." must never reach a client that way.
+        raise ValueError(
+            f"Unsupported target scheme {scheme!r} in {stripped!r}; "
+            "only http:// and https:// targets are allowed."
+        )
     return stripped
 
 
