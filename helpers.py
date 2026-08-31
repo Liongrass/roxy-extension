@@ -1,5 +1,6 @@
+import re
 from typing import Optional
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 from fastapi import Request
 from lnurl import decode as lnurl_decode
@@ -7,20 +8,39 @@ from lnurl import encode as lnurl_encode
 
 from .models import Roxy
 
+# user@domain.tld, no scheme, no path, no whitespace, no second "@" -- deliberately
+# stricter than a real email regex so a URL with userinfo (https://u:p@host/x)
+# never gets misread as a lightning address (ruled out below by the scheme check
+# anyway, but the "no slash" restriction keeps this from matching anything with
+# a path too).
+_LIGHTNING_ADDRESS_RE = re.compile(r"^[^\s@/]+@[^\s@/]+\.[^\s@/]+$")
+
 
 def is_onion_host(host: str) -> bool:
     return host.lower().endswith(".onion")
 
 
+def is_lightning_address(value: str) -> bool:
+    return not urlsplit(value).scheme and bool(_LIGHTNING_ADDRESS_RE.match(value))
+
+
+def lightning_address_to_url(address: str) -> str:
+    """LUD-16: turn user@domain into the well-known LNURL-pay URL it maps to."""
+    user, domain = address.split("@", 1)
+    scheme = "http" if is_onion_host(domain) else "https"
+    return f"{scheme}://{domain}/.well-known/lnurlp/{quote(user, safe='')}"
+
+
 def resolve_target_url(target_url: str) -> str:
     """Return the real HTTP(S) URL a roxy should forward requests to.
 
-    A target_url may be a plain http(s) URL (scheme optional -- defaults to
+    A target_url may be: a plain http(s) URL (scheme optional -- defaults to
     "https://", or "http://" for a bare .onion host, since Tor hidden
-    services are conventionally served over plain http), or a bech32-encoded
+    services are conventionally served over plain http); a bech32-encoded
     LNURL string, optionally prefixed with a "lightning:" URI scheme (as
-    wallets/QR codes commonly display it) -- in which case it is decoded to
-    the URL it points to.
+    wallets/QR codes commonly display it), decoded to the URL it points to;
+    or a Lightning Address ("user@domain.tld"), resolved per LUD-16 to
+    "https://domain.tld/.well-known/lnurlp/user".
     """
     stripped = target_url.strip()
     if stripped.lower().startswith("lightning:"):
@@ -30,6 +50,8 @@ def resolve_target_url(target_url: str) -> str:
             stripped = str(lnurl_decode(stripped))
         except Exception as exc:
             raise ValueError(f"Could not decode LNURL target: {stripped!r}.") from exc
+    elif is_lightning_address(stripped):
+        stripped = lightning_address_to_url(stripped)
     # Applies whether stripped came in as-is or just came out of lnurl_decode
     # above -- a decoded LNURL can be schemeless too if it was encoded from a
     # bare host/path in the first place.

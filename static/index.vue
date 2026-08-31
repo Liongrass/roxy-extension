@@ -234,9 +234,9 @@
                 <q-card-section>
                   <p>
                     <strong>Roxy</strong> is a generic HTTP redirector. Create
-                    a roxy pointing at any URL (or LNURL) as its
-                    <em>target</em>. Roxy hands you back a stable public link
-                    &mdash; shown as a raw URL or as a bech32 LNURL, your
+                    a roxy pointing at any URL, LNURL, or Lightning Address as
+                    its <em>target</em>. Roxy hands you back a stable public
+                    link &mdash; shown as a raw URL or as a bech32 LNURL, your
                     choice &mdash; along with a QR code.
                   </p>
                   <p>
@@ -247,7 +247,8 @@
                     redirecting wherever you last set it.
                   </p>
                   <p>
-                    If a target is itself an LNURL, Roxy decodes it to the
+                    If a target is itself an LNURL or a Lightning Address
+                    (<code>user@domain.tld</code>), Roxy resolves it to the
                     URL it points to before redirecting, so an existing
                     LNURL-pay/withdraw endpoint can be re-hosted behind a
                     link you control. Roxy never fetches the target itself
@@ -285,7 +286,7 @@
             dense
             v-model.trim="formDialog.data.target_url"
             type="text"
-            label="Target URL or LNURL *"
+            label="Target: URL, LNURL, or Lightning Address *"
             hint="Where visitors to this roxy's link get redirected"
           ></q-input>
           <q-select
@@ -334,7 +335,7 @@
             dense
             v-model.trim="editDialog.data.target_url"
             type="text"
-            label="Target URL or LNURL *"
+            label="Target: URL, LNURL, or Lightning Address *"
             hint="Where visitors to this roxy's link get redirected"
           ></q-input>
           <q-select

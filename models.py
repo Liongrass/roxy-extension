@@ -9,14 +9,21 @@ Encoding = Literal["url", "lnurl"]
 class CreateRoxyData(BaseModel):
     title: str
     wallet: Optional[str] = None
-    target_url: str
+    target_url: str = Field(
+        description="A URL, an LNURL (optionally 'lightning:'-prefixed), or a "
+        "Lightning Address (user@domain.tld)."
+    )
     encoding: Encoding = "lnurl"
     is_enabled: bool = True
 
 
 class UpdateRoxyData(BaseModel):
     title: Optional[str] = None
-    target_url: Optional[str] = None
+    target_url: Optional[str] = Field(
+        default=None,
+        description="A URL, an LNURL (optionally 'lightning:'-prefixed), or a "
+        "Lightning Address (user@domain.tld).",
+    )
     encoding: Optional[Encoding] = None
     is_enabled: Optional[bool] = None
 
